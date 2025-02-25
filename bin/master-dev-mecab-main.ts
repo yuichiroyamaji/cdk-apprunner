@@ -1,9 +1,20 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { CdkStack } from '../lib/cdk-stack';
+import { MasterDevMecabMainStack } from '../lib/stacks/master-dev-mecab-main-stack';
+// import { AppRunnerStack } from '../lib/stacks/apprunner-stack';
 
 const app = new cdk.App();
-new CdkStack(app, 'CdkStack', {
+
+new MasterDevMecabMainStack(app, 'MecabAppRunnerStack', {
+  env: {
+    // account: process.env.CDK_DEFAULT_ACCOUNT,
+    // region: process.env.CDK_DEFAULT_REGION,
+    account: '588907989152',
+    region: 'ap-northeast-1',
+  },
+});
+
+// new MasterDevMecabMainStack(app, 'MasterDevMecabMainStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
@@ -14,7 +25,7 @@ new CdkStack(app, 'CdkStack', {
 
   /* Uncomment the next line if you know exactly what Account and Region you
    * want to deploy the stack to. */
-  env: { account: '588907989152', region: 'ap-northeast-1' },
+  // env: { account: '123456789012', region: 'us-east-1' },
 
   /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
-});
+// });

@@ -1,0 +1,25 @@
+version: 0.2
+
+env:
+  parameter-store:
+    PARA_DOCKER_USER: '/cicd/codebuild/docker_user'
+    PARA_DOCKER_PASS: '/cicd/codebuild/docker_pass'
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR for base image...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${baseImageRepositoryUri}
+      - echo Logging in to Amazon ECR for target repository...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${repositoryUri}
+      - echo Logging in to Docker Hub...
+      - echo $PARA_DOCKER_PASS | docker login -u $PARA_DOCKER_USER --password-stdin
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t ${repositoryUri}:latest app/mecab  # Use the repository URI as the image name
+      - docker tag ${repositoryUri}:latest ${repositoryUri}:latest  # Tagging the image
+      - docker push ${repositoryUri}:latest  # Push the image to ECR
+artifacts:
+  files:
+    - '**/*'

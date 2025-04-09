@@ -17,6 +17,31 @@
     ]
   },
   "context": {
+    "projectInfo": {
+      "projectName": "MasterDevMecabMain",
+      "projectRepoName": "master-dev-mecab-main",
+      "projectMecabRepoName": "mecab-base-image"
+    },
+    "dev": {
+      "description": "Develop environment variables",
+      "envName": "dev",
+      "envNameStack": "Dev",
+      "branchName": "develop",
+      "env": {
+        "account": "588907989152",
+        "region": "ap-northeast-1"
+      }
+    },
+    "prd": {
+      "description": "Production environment variables",
+      "envName": "prd",
+      "envNameStack": "Prd",
+      "branchName": "master",
+      "env": {
+        "account": "588907989152",
+        "region": "ap-northeast-1"
+      }
+    },
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

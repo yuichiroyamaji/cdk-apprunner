@@ -1,0 +1,51 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - npm install -g aws-cdk
+  build:
+    commands:
+      - echo Packaging Lambda function...
+      - echo "Lambda Function Name is $LAMBDA_FUNCTION_NAME"
+      - cd src/lambda
+      # Normalize file timestamps to ensure consistent zip file creation
+      - find . -exec touch -t 202201010000 {} +
+      # Create a zip archive of the current directory, excluding extra file attributes
+      - zip -r -X function.zip .
+      - if aws s3api head-object --bucket $S3_BUCKET_NAME --key $LAMBDA_FUNCTION_NAME.zip; then
+          aws s3 cp s3://$S3_BUCKET_NAME/$LAMBDA_FUNCTION_NAME.zip ./pre_function.zip;
+        else
+          echo "No existing zip file found in S3.";
+        fi
+      - if [ ! -f pre_function.zip ] || ! cmp -s function.zip pre_function.zip; then
+          echo "Changes detected or no previous zip found, uploading new function.zip and updating Lambda.";
+          aws s3 cp function.zip s3://$S3_BUCKET_NAME/$LAMBDA_FUNCTION_NAME.zip;
+          aws lambda update-function-code --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb://function.zip;
+          echo "Checking Lambda update status...";
+          while true; do
+            STATUS=$(aws lambda get-function-configuration --function-name $LAMBDA_FUNCTION_NAME --query 'State' --output text);
+            if [ "$STATUS" = "Active" ]; then
+              break;
+            fi;
+            echo "Waiting for Lambda update to complete...";
+            sleep 5;
+          done;
+          COMMIT_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION;
+          COMMIT_MESSAGE=$(aws codecommit get-commit --repository-name $REPO_NAME --commit-id $COMMIT_ID --query 'commit.message' --output text);
+          VERSION_DESCRIPTION="[$COMMIT_ID] $COMMIT_MESSAGE";
+          VERSION=$(aws lambda publish-version --function-name $LAMBDA_FUNCTION_NAME --description "$VERSION_DESCRIPTION" --query 'Version' --output text);
+          echo $VERSION;
+          if ! aws lambda get-alias --function-name $LAMBDA_FUNCTION_NAME --name $ENV; then
+            aws lambda create-alias --function-name $LAMBDA_FUNCTION_NAME --name $ENV --function-version $VERSION;
+          else
+            aws lambda update-alias --function-name $LAMBDA_FUNCTION_NAME --name $ENV --function-version $VERSION;
+          fi;
+        else
+          echo "No changes in function.zip, skipping upload and update.";
+        fi
+
+artifacts:
+  files:
+    - src/lambda/function.zip
+  discard-paths: yes

@@ -1,31 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
-    "declaration": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": false,
-    "inlineSourceMap": true,
-    "inlineSources": true,
-    "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
-    "typeRoots": [
-      "./node_modules/@types"
-    ]
+    "target": "ES6",                          // Target ECMAScript version
+    "module": "commonjs",                     // Module system
+    "moduleResolution": "node",               // Resolve modules using Node.js style
+    "esModuleInterop": true,                  // Enables emit interoperability between CommonJS and ES Modules
+    "resolveJsonModule": true,                // Allows importing .json files
+    "outDir": "./dist",                       // Output directory for compiled files
+    "rootDir": "./",                          // Root directory of input files
+    "strict": true,                           // Enable all strict type-checking options
+    "skipLibCheck": true                      // Skip type checking of declaration files
   },
+  "include": [
+    "src/**/*",                               // Include all TypeScript files in the src directory
+    "lib/**/*",                               // Include all TypeScript files in the lib directory
+    "config/**/*"
+  ],
   "exclude": [
-    "node_modules",
-    "cdk.out"
+    "node_modules",                           // Exclude node_modules from compilation
+    "dist"                                    // Exclude the output directory
   ]
 }

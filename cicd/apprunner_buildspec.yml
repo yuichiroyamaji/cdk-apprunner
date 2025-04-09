@@ -1,0 +1,34 @@
+version: 0.2
+
+env:
+  parameter-store:
+    PARA_DOCKER_USER: '/cicd/codebuild/docker_user'
+    PARA_DOCKER_PASS: '/cicd/codebuild/docker_pass'
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR for base image...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${baseImageRepositoryUri}
+      - echo Logging in to Amazon ECR for target repository...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${repositoryUri}
+      - echo Logging in to Docker Hub...
+      - echo $PARA_DOCKER_PASS | docker login -u $PARA_DOCKER_USER --password-stdin
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t ${repositoryUri}:latest src/mecab
+      - echo Pulling the existing Docker image from ECR...
+      - docker pull ${repositoryUri}:latest || echo "No existing image found."
+      - echo Comparing the existing image with the new image...
+      - if [ "$(docker images --no-trunc --quiet ${repositoryUri}:latest | head -n 1)" = "$(docker images --no-trunc --quiet ${repositoryUri}:latest | tail -n 1)" ] && [ $(aws ecr list-images --repository-name $(basename ${repositoryUri}) --region $AWS_DEFAULT_REGION --query 'imageIds' --output text | wc -l) -gt 0 ]; then
+          echo "No changes detected in the Docker image, skipping push.";
+        else
+          echo "Changes detected or no previous image found, pushing the new Docker image to ECR.";
+          docker tag ${repositoryUri}:latest ${repositoryUri}:latest;
+          docker push ${repositoryUri}:latest;
+        fi
+        
+artifacts:
+  files:
+    - '**/*'
